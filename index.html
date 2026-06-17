@@ -26,7 +26,7 @@
 <meta name="twitter:description" content="Know which commitments will miss — weeks before the status turns red, with the fix drafted for you to approve." />
 <meta name="twitter:image" content="https://kramuly.com/og.png" />
 <!-- Self-contained SVG favicon (indigo mark + live-green dot) -->
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%232D2BD4'/><circle cx='16' cy='16' r='5' fill='%2312936A'/></svg>" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect width='40' height='40' rx='11' fill='%232D2BD4'/><path d='M13 11V29M13 20L25 11M13 20L25 29' stroke='%23fff' stroke-width='3.1' stroke-linecap='round' stroke-linejoin='round' fill='none'/><circle cx='30' cy='10.5' r='3' fill='%2316A074'/></svg>" />
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"Organization","name":"Kramuly","url":"https://kramuly.com/","description":"Agentic commitment intelligence — Kramuly's agents watch the commitments behind every client program, warn which will miss weeks early, and draft the fix. Built for IT services firms, GCCs and systems integrators.","email":"hello@kramuly.com","slogan":"Agentic commitment intelligence"}
 </script>
@@ -60,9 +60,10 @@
 
   /* Header */
   header{position:sticky;top:0;z-index:20;background:rgba(251,251,249,.82);backdrop-filter:saturate(160%) blur(12px);border-bottom:1px solid var(--line)}
-  .nav{display:flex;align-items:center;justify-content:space-between;height:70px}
-  .wordmark{font-weight:700;font-size:22px;letter-spacing:-0.03em;display:inline-flex;align-items:center;gap:10px}
-  .dot{width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(18,147,106,.16)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:74px}
+  .wordmark{font-weight:700;font-size:27px;letter-spacing:-0.03em;display:inline-flex;align-items:center;gap:12px;color:var(--ink)}
+  .brand-mark{width:34px;height:34px;display:block;flex:0 0 auto}
+  .foot-brand .brand-mark{width:22px;height:22px}
   .nav-link{font-size:13.5px;font-weight:600;color:var(--ink);text-decoration:none;
     border:1px solid var(--line);padding:8px 15px;border-radius:9px;
     transition:border-color .15s ease,background .15s ease,color .15s ease}
@@ -325,7 +326,14 @@
 
 <header>
   <div class="wrap nav">
-    <span class="wordmark"><span class="dot"></span>Kramuly</span>
+    <span class="wordmark">
+      <svg class="brand-mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect width="40" height="40" rx="11" fill="url(#kgrad)" />
+        <path d="M13 11 V29 M13 20 L25 11 M13 20 L25 29" stroke="#fff" stroke-width="3.1" stroke-linecap="round" stroke-linejoin="round" />
+        <circle cx="30" cy="10.5" r="5.4" fill="#12936A" opacity=".22" />
+        <circle cx="30" cy="10.5" r="3" fill="#16A074" />
+        <defs><linearGradient id="kgrad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse"><stop stop-color="#3634E6" /><stop offset="1" stop-color="#211FA8" /></linearGradient></defs>
+      </svg>Kramuly</span>
     <a class="nav-link" href="mailto:hello@kramuly.com?subject=Early%20access%20%E2%80%94%20Kramuly">Request access</a>
   </div>
 </header>
@@ -635,7 +643,13 @@
 
 <footer>
   <div class="wrap foot">
-    <span class="foot-brand"><span class="dot"></span>Kramuly&nbsp;<span class="foot-c">© 2026</span></span>
+    <span class="foot-brand">
+      <svg class="brand-mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect width="40" height="40" rx="11" fill="url(#kgradf)" />
+        <path d="M13 11 V29 M13 20 L25 11 M13 20 L25 29" stroke="#fff" stroke-width="3.1" stroke-linecap="round" stroke-linejoin="round" />
+        <circle cx="30" cy="10.5" r="3" fill="#16A074" />
+        <defs><linearGradient id="kgradf" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse"><stop stop-color="#3634E6" /><stop offset="1" stop-color="#211FA8" /></linearGradient></defs>
+      </svg>Kramuly&nbsp;<span class="foot-c">© 2026</span></span>
     <a href="mailto:hello@kramuly.com?subject=Early%20access%20%E2%80%94%20Kramuly">hello@kramuly.com</a>
   </div>
 </footer>
