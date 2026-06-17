@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Kramuly — Agentic commitment intelligence</title>
+<meta name="description" content="A dashboard waits for you to check it. Kramuly's agents read the work behind every client program — commits, deploys, tickets and channels — to know which commitments will miss before the status turns red, investigate why, and draft the fix for you to approve." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+  /* [EDIT: accent color] deep indigo + state colors */
+  :root{
+    --ink:#0E0F12;--paper:#FBFBF9;--muted:#5C6068;--faint:#8A8F98;
+    --line:#E8E7E2;--line-2:#EFEEE9;--card:#FFFFFF;
+    --accent:#2D2BD4;--accent-dark:#211FA8;--accent-wash:#F0F0FF;
+    --green:#12936A;--amber:#C9920B;--red:#D5443A;--maxw:1080px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;scroll-padding-top:88px;-webkit-text-size-adjust:100%}
+  ::selection{background:rgba(45,43,212,.16);color:var(--ink)}
+  body{font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);
+    background:var(--paper);line-height:1.6;-webkit-font-smoothing:antialiased;border-top:3px solid var(--accent);
+    background-image:radial-gradient(1100px 460px at 74% -8%, var(--accent-wash) 0%, rgba(240,240,255,0) 60%)}
+  h1,h2,h3,.wordmark{font-family:"Space Grotesk",sans-serif;letter-spacing:-0.025em}
+  .mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+  .wrap{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 24px}
+  a{color:inherit}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:"Space Grotesk";font-size:11px;font-weight:600;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+  .eyebrow::before{content:"";width:18px;height:1px;background:var(--accent);opacity:.5}
+  .ix{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--faint);letter-spacing:.05em}
+  .shead{display:flex;align-items:baseline;gap:14px;margin-bottom:10px}
+
+  /* Header */
+  header{position:sticky;top:0;z-index:20;background:rgba(251,251,249,.82);backdrop-filter:saturate(160%) blur(12px);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:70px}
+  .wordmark{font-weight:700;font-size:22px;letter-spacing:-0.03em;display:inline-flex;align-items:center;gap:10px}
+  .dot{width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(18,147,106,.16)}
+  .nav-link{font-size:13.5px;font-weight:600;color:var(--ink);text-decoration:none;
+    border:1px solid var(--line);padding:8px 15px;border-radius:9px;
+    transition:border-color .15s ease,background .15s ease,color .15s ease}
+  .nav-link:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-wash)}
+
+  section{padding:clamp(60px,9vw,108px) 0}
+  section[id]{scroll-margin-top:88px}
+  h2{font-size:clamp(1.7rem,4.4vw,2.45rem);font-weight:600;line-height:1.1}
+  .lead{color:var(--muted);font-size:clamp(1.02rem,2.4vw,1.16rem);max-width:62ch}
+
+  /* HERO */
+  .hero{padding-top:clamp(52px,8vw,92px);padding-bottom:clamp(56px,9vw,96px)}
+  .hero-grid{display:grid;grid-template-columns:1fr;gap:48px;align-items:center}
+  .hero h1{margin-top:20px;font-size:clamp(2.35rem,8vw,3.95rem);font-weight:700;line-height:1.03;letter-spacing:-0.04em;max-width:15ch}
+  .hero .subhead{margin-top:24px;color:var(--muted);font-size:clamp(1.05rem,2.6vw,1.2rem);max-width:56ch}
+  .mark{color:var(--ink);font-weight:600;background:linear-gradient(180deg,transparent 62%, rgba(45,43,212,.16) 0);padding:0 1px}
+  .cta-row{margin-top:34px;display:flex;flex-wrap:wrap;align-items:center;gap:18px}
+  .btn{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;font-weight:600;font-size:1rem;
+    padding:14px 26px;border-radius:11px;box-shadow:0 1px 2px rgba(14,15,18,.1);
+    transition:background .18s ease,transform .18s ease,box-shadow .18s ease}
+  .btn:hover{background:var(--accent-dark);transform:translateY(-1px);box-shadow:0 8px 22px rgba(45,43,212,.24)}
+  .btn:active{transform:translateY(0);box-shadow:0 1px 2px rgba(14,15,18,.1)}
+  .btn-ghost{font-weight:500;font-size:.95rem;color:var(--muted);text-decoration:none}
+  .btn-ghost:hover{color:var(--ink)}
+  .aud{margin-top:16px;font-size:.92rem;color:var(--muted)}
+  .aud b{color:var(--ink);font-weight:600}
+  .note{color:var(--faint);font-size:.88rem;margin-top:14px}
+
+  /* live-status pulse — used by the preview & room agent dots */
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+  /* PRODUCT PREVIEW — browser-framed single-commitment mockup (depth: one commitment) */
+  .preview-wrap{margin-top:clamp(44px,6vw,68px)}
+  .browser{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#fff;
+    box-shadow:0 34px 80px -38px rgba(14,15,18,.28),0 2px 8px rgba(14,15,18,.04)}
+  .browser-bar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;
+    padding:11px 14px;background:#F4F3EF;border-bottom:1px solid var(--line-2)}
+  .tl{display:flex;gap:7px;justify-self:start}
+  .tl i{width:10px;height:10px;border-radius:50%;background:#DAD8D2}
+  .urlpill{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--line);
+    border-radius:8px;padding:5px 14px;font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--faint)}
+  .urlpill svg{width:11px;height:11px}
+  .browser-body{padding:clamp(20px,3.4vw,34px)}
+  .agents{display:flex;flex-wrap:wrap;gap:18px;padding-bottom:18px;margin-bottom:22px;border-bottom:1px solid var(--line-2)}
+  .ag{display:inline-flex;align-items:center;gap:8px;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--muted)}
+  .ag i{width:8px;height:8px;border-radius:50%;background:var(--faint)}
+  .ag.live i{background:var(--green);box-shadow:0 0 0 3px rgba(18,147,106,.14);animation:pulse 2s ease-in-out infinite}
+  .ag.trace i{background:var(--accent)}
+  .ag.ready i{background:var(--green)}
+  .commit-head{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;justify-content:space-between}
+  .commit-title{font-family:"Space Grotesk",sans-serif;font-size:clamp(1.12rem,2.6vw,1.34rem);font-weight:600;letter-spacing:-0.02em}
+  .commit-title span{color:var(--muted);font-weight:500}
+  .rep-pill2{display:inline-flex;align-items:center;gap:7px;font-family:"JetBrains Mono",monospace;font-size:11.5px;font-weight:600;
+    color:#5C8A77;background:rgba(18,147,106,.09);padding:6px 12px;border-radius:999px;white-space:nowrap}
+  .rep-pill2 i{width:7px;height:7px;border-radius:50%;background:#9DC2B3}
+  .risk{margin-top:14px;display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+  .risk-txt{color:var(--red);font-weight:600;font-size:clamp(1rem,2.2vw,1.08rem)}
+  .conf{display:inline-flex;align-items:center;gap:6px;font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:600;
+    color:var(--accent);background:var(--accent-wash);border:1px solid #DAD9FF;padding:4px 10px;border-radius:7px;white-space:nowrap}
+  .why{margin-top:24px}
+  .why-l{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+  .evrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid var(--line-2)}
+  .evrow:first-of-type{margin-top:8px}
+  .ev-t{font-size:.97rem}
+  .ev-s{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--muted);background:#F4F3EF;border:1px solid var(--line);
+    border-radius:6px;padding:3px 9px;white-space:nowrap}
+  .drafted2{margin-top:24px;border:1px solid var(--line);border-radius:12px;background:#FCFCFA;padding:17px 17px 15px}
+  .drafted2 .dl{display:inline-flex;align-items:center;gap:7px;font-family:"JetBrains Mono",monospace;font-size:10px;
+    letter-spacing:.08em;color:var(--green)}
+  .drafted2 .dl i{width:6px;height:6px;border-radius:50%;background:var(--green)}
+  .drafted2 .dt{margin-top:10px;font-weight:600;font-size:1.02rem;letter-spacing:-0.01em}
+  .drafted2 .dp{margin-top:6px;color:var(--muted);font-size:.92rem;line-height:1.6;max-height:3.2em;overflow:hidden;
+    -webkit-mask-image:linear-gradient(180deg,#000 58%,transparent);mask-image:linear-gradient(180deg,#000 58%,transparent)}
+  .drafted2 .da2{margin-top:15px;display:flex;flex-wrap:wrap;gap:9px}
+  .appr2{font-size:12.5px;font-weight:600;padding:8px 17px;border-radius:8px;background:var(--accent);color:#fff}
+  .edit2{font-size:12.5px;font-weight:500;padding:8px 17px;border-radius:8px;border:1px solid var(--line);color:var(--ink);background:#fff}
+  .preview-cap{margin-top:15px;text-align:center;font-size:.86rem;color:var(--faint)}
+
+  /* PROBLEM — editorial numbered list */
+  .problem{border-top:1px solid var(--line)}
+  .p-list{margin-top:40px;display:grid;grid-template-columns:1fr;border-top:1px solid var(--line-2)}
+  .p-item{display:grid;grid-template-columns:auto 1fr;gap:20px;padding:26px 0;border-bottom:1px solid var(--line-2);transition:background .2s}
+  .p-item:hover{background:#fff}
+  .p-num{font-family:"JetBrains Mono",monospace;font-size:13px;color:var(--accent);padding-top:3px}
+  .p-item h3{font-size:1.16rem;font-weight:600;letter-spacing:-0.015em}
+  .p-item p{margin-top:6px;color:var(--muted);font-size:1rem;max-width:52ch}
+
+  /* PRODUCT — the centerpiece: a panel of three things the agents do */
+  .product{background:var(--ink);color:#fff}
+  .product .eyebrow{color:#A9A8FF}.product .eyebrow::before{background:#A9A8FF}
+  .product h2{color:#fff;max-width:20ch}
+  .product .sub{margin-top:16px;color:#B7BAC2;font-size:clamp(1.02rem,2.4vw,1.16rem);max-width:54ch}
+  .stack{margin-top:52px;display:grid;grid-template-columns:1fr;gap:0}
+  .act{display:grid;grid-template-columns:1fr;gap:8px;padding:34px 0;border-top:1px solid rgba(255,255,255,.12)}
+  .act:last-child{border-bottom:1px solid rgba(255,255,255,.12)}
+  .act .n{font-family:"Space Grotesk";font-weight:700;font-size:clamp(2.2rem,6vw,3rem);color:var(--accent);line-height:1;
+    letter-spacing:-0.04em;-webkit-text-stroke:0}
+  .act h3{font-size:clamp(1.3rem,3.2vw,1.6rem);font-weight:600;letter-spacing:-0.02em}
+  .act p{color:#B7BAC2;font-size:1.04rem;max-width:60ch;margin-top:4px}
+
+  /* HOW IT WORKS — compact 3 steps */
+  .how h2{max-width:24ch}
+  .how .lead{margin-top:16px}
+  .steps{margin-top:44px;display:grid;grid-template-columns:1fr;gap:30px}
+  .steps>div{padding-top:20px;border-top:2px solid var(--accent)}
+  .steps .num{font-family:"JetBrains Mono",monospace;font-size:.8rem;color:var(--faint)}
+  .steps h3{margin-top:4px;font-size:1.1rem;font-weight:600;letter-spacing:-0.015em}
+  .steps p{margin-top:7px;color:var(--muted);font-size:.98rem;max-width:38ch}
+
+  /* HOW — signal sources (icon + descriptor) */
+  .srcs-label{margin-top:44px;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--faint);
+    letter-spacing:.08em;text-transform:uppercase}
+  .srcs{margin-top:18px;display:grid;grid-template-columns:1fr;gap:18px}
+  .src{display:flex;gap:13px;align-items:flex-start}
+  .src-ic{flex:0 0 auto;width:36px;height:36px;border-radius:9px;background:var(--accent-wash);
+    color:var(--accent);display:flex;align-items:center;justify-content:center}
+  .src-ic svg{width:19px;height:19px;display:block}
+  .src-n{display:block;font-weight:600;font-size:.96rem;letter-spacing:-0.01em}
+  .src-d{display:block;color:var(--muted);font-size:.87rem;margin-top:2px;max-width:34ch}
+  .src-note{margin-top:28px;font-size:.86rem;color:var(--faint)}
+
+  /* REALITY — reported (one green line) vs. real state (scattered across tools) */
+  .reality{background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .reality .lead{margin-top:16px}
+  .rv{margin-top:44px;display:grid;grid-template-columns:1fr;gap:16px}
+  .rv-card{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--paper)}
+  .rv-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line-2);
+    font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+  .rep .rv-b{padding:26px 18px 28px;display:flex;flex-direction:column;align-items:flex-start;gap:13px}
+  .rep-pill{display:inline-flex;align-items:center;gap:9px;font-family:"JetBrains Mono",monospace;font-size:15px;font-weight:600;
+    color:var(--green);background:rgba(18,147,106,.10);padding:10px 18px;border-radius:999px}
+  .rep-pill i{width:9px;height:9px;border-radius:50%;background:var(--green)}
+  .rep-meta{font-size:.95rem;font-weight:500}
+  .rep-note{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--faint);line-height:1.5}
+  .real .rv-b{padding:6px 8px}
+  .sig{display:flex;gap:11px;align-items:flex-start;padding:12px 10px}
+  .sig+.sig{border-top:1px solid var(--line-2)}
+  .sig-ic{flex:0 0 auto;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+    background:rgba(201,146,11,.12);color:var(--amber)}
+  .sig.red .sig-ic{background:rgba(213,68,58,.10);color:var(--red)}
+  .sig-ic svg{width:16px;height:16px;display:block}
+  .sig-s{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--faint);letter-spacing:.03em;text-transform:uppercase}
+  .sig-t{font-size:.93rem;font-weight:500;margin-top:2px}
+  .reconcile{margin-top:16px;display:flex;flex-wrap:wrap;align-items:center;gap:14px;justify-content:space-between;
+    padding:18px 20px;border-radius:14px;background:var(--ink);color:#fff}
+  .reconcile .rc-l{display:flex;align-items:center;gap:11px;font-size:1rem;color:#E7E7EA}
+  .reconcile .rc-l b{color:#fff;font-weight:600}
+  .rc-dot{flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:#A9A8FF}
+  .rc-pill{display:inline-flex;align-items:center;gap:8px;font-family:"JetBrains Mono",monospace;font-size:12.5px;font-weight:600;
+    color:#fff;background:var(--red);padding:9px 15px;border-radius:999px}
+  .rc-pill i{width:8px;height:8px;border-radius:50%;background:#fff}
+
+  /* COORDINATION ROOM — portfolio work surface (breadth: every commitment, triaged) */
+  .room-sec{border-top:1px solid var(--line)}
+  .room-sec .lead{margin-top:16px;margin-bottom:44px}
+  .room-top{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--line-2);
+    background:#FCFCFA;font-family:"JetBrains Mono",monospace;font-size:11.5px;color:var(--muted)}
+  .room-top .rt-l{letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+  .room-top b{color:var(--ink);font-weight:600}
+  .room-top .rt-sep{color:#CFCDC6}
+  .room-grid{display:grid;grid-template-columns:1fr}
+  .room-left,.room-right{padding:16px 18px;border-top:1px solid var(--line-2)}
+  .room-main{padding:6px 8px}
+  .rail-l{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:12px}
+  .filters{display:flex;flex-direction:column;gap:3px}
+  .filt{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 11px;border-radius:8px;font-size:13px;color:var(--muted)}
+  .filt .c{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--faint)}
+  .filt.sel{background:var(--accent-wash);color:var(--accent);font-weight:600}
+  .filt.sel .c{color:var(--accent)}
+  .rows{display:flex;flex-direction:column}
+  .row{padding:14px 12px;border-bottom:1px solid var(--line-2)}
+  .row:last-child{border-bottom:0}
+  .row.exp{background:#FCFCFA;border-radius:10px}
+  .row-top{display:flex;flex-wrap:wrap;align-items:center;gap:9px}
+  .row-name{font-weight:600;font-size:.97rem;letter-spacing:-0.01em;margin-right:auto}
+  .row-name span{color:var(--muted);font-weight:500}
+  .risk-tag{font-family:"JetBrains Mono",monospace;font-size:10.5px;font-weight:600;color:var(--red);background:rgba(213,68,58,.10);padding:3px 9px;border-radius:6px;white-space:nowrap}
+  .conf2{font-family:"JetBrains Mono",monospace;font-size:10.5px;font-weight:600;color:var(--accent);background:var(--accent-wash);border:1px solid #DAD9FF;padding:3px 8px;border-radius:6px;white-space:nowrap}
+  .status{font-size:11.5px;font-weight:600;padding:5px 11px;border-radius:999px;white-space:nowrap}
+  .status.go{color:#fff;background:var(--accent)}
+  .status.inv{color:var(--amber);background:rgba(201,146,11,.13)}
+  .status.note{color:var(--muted);background:#F1F0EC}
+  .row-why{margin-top:9px;font-size:.9rem;color:var(--muted)}
+  .row-draft{margin-top:11px;border:1px solid var(--line);border-radius:10px;background:#fff;padding:12px 13px}
+  .row-draft .rd-l{display:inline-flex;align-items:center;gap:7px;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.07em;color:var(--green)}
+  .row-draft .rd-l i{width:6px;height:6px;border-radius:50%;background:var(--green)}
+  .row-draft .rd-t{font-weight:600;font-size:.93rem;margin-top:7px}
+  .row-draft .rd-a{margin-top:11px;display:flex;flex-wrap:wrap;gap:8px}
+  .agents-panel{display:flex;flex-direction:column;gap:15px}
+  .apx{display:flex;gap:10px;align-items:flex-start}
+  .apx i{width:8px;height:8px;border-radius:50%;background:var(--faint);margin-top:4px;flex:0 0 auto}
+  .apx.live i{background:var(--green);box-shadow:0 0 0 3px rgba(18,147,106,.14);animation:pulse 2s ease-in-out infinite}
+  .apx.trace i{background:var(--accent)}
+  .apx.ready i{background:var(--green)}
+  .apx .n{font-size:12.5px;font-weight:600;letter-spacing:-0.01em}
+  .apx .d{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--faint);margin-top:2px}
+
+  /* PAYOFF — the hidden savings (green = protected value) */
+  .payoff{border-top:1px solid var(--line)}
+  .payoff h2{max-width:20ch}
+  .payoff .lead{margin-top:16px}
+  .value-grid{margin-top:44px;display:grid;grid-template-columns:1fr;gap:16px}
+  .vcard{background:#fff;border:1px solid var(--line);border-top:2px solid var(--green);border-radius:14px;
+    padding:24px 24px 26px;transition:box-shadow .2s ease,transform .2s ease}
+  .vcard:hover{box-shadow:0 14px 34px -22px rgba(14,15,18,.25);transform:translateY(-2px)}
+  .vt{display:inline-flex;align-items:center;gap:6px;font-family:"JetBrains Mono",monospace;font-size:10.5px;
+    font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--green)}
+  .vt::before{content:"+";font-weight:700}
+  .vcard h3{margin-top:12px;font-size:1.16rem;font-weight:600;letter-spacing:-0.015em}
+  .vcard p{margin-top:7px;color:var(--muted);font-size:.99rem}
+
+  /* WHO */
+  .who{background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .who .lead{margin-top:18px;font-size:clamp(1.06rem,2.6vw,1.24rem);color:var(--ink);max-width:64ch}
+  .who .lead b{font-weight:600}
+  .segs{margin-top:26px;display:flex;flex-wrap:wrap;gap:10px}
+  .seg{font-size:13px;font-weight:500;color:var(--ink);background:var(--accent-wash);
+    border:1px solid #DAD9FF;border-radius:999px;padding:7px 15px;transition:border-color .15s,background .15s}
+  .seg:hover{border-color:var(--accent);background:#E7E7FF}
+
+  /* CTA BAND */
+  .band{background:var(--accent);color:#fff;text-align:center}
+  .band .eyebrow{color:#D7D6FF}.band .eyebrow::before{background:#D7D6FF}
+  .band h2{margin:14px auto 0;max-width:22ch;color:#fff}
+  .band p{margin:16px auto 0;color:#DAD9FF;font-size:clamp(1.02rem,2.4vw,1.16rem);max-width:46ch}
+  .band .cta-row{justify-content:center;margin-top:34px}
+  .band .btn{background:#fff;color:var(--accent);box-shadow:0 1px 2px rgba(0,0,0,.15)}
+  .band .btn:hover{background:#F0F0FF;box-shadow:0 8px 22px rgba(0,0,0,.22)}
+  .band .email{margin-top:20px;font-size:.95rem;color:#C7C6FF}
+  .band .email a{color:#fff;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.4)}
+  .band .email a:hover{border-color:#fff}
+
+  footer{border-top:1px solid var(--line);padding:32px 0}
+  .foot{display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:center;font-size:.9rem}
+  .foot-brand{font-family:"Space Grotesk";font-weight:700;font-size:17px;letter-spacing:-0.02em;
+    display:inline-flex;align-items:center;gap:9px;color:var(--ink)}
+  .foot-c{font-family:"Inter",sans-serif;font-weight:400;font-size:.82rem;color:var(--faint);letter-spacing:0}
+  .foot a{color:var(--muted);text-decoration:none}.foot a:hover{color:var(--ink)}
+
+  @media(min-width:760px){
+    .p-list{grid-template-columns:1fr 1fr;column-gap:48px}
+    .steps{grid-template-columns:repeat(3,1fr);gap:36px}
+    .act{grid-template-columns:140px 1fr;gap:28px;align-items:start;padding:40px 0}
+    .act .n{padding-top:2px}
+    .value-grid{grid-template-columns:1fr 1fr;gap:18px}
+    .srcs{grid-template-columns:1fr 1fr;column-gap:36px;row-gap:24px}
+    .rv{grid-template-columns:.82fr 1.18fr;gap:18px}
+  }
+  @media(min-width:860px){
+    .room-grid{grid-template-columns:176px minmax(0,1fr) 212px}
+    .room-left{border-top:0;border-right:1px solid var(--line-2)}
+    .room-right{border-top:0;border-left:1px solid var(--line-2)}
+    .room-main{border-top:0;padding:10px 14px}
+  }
+</style>
+</head>
+<body>
+
+<!-- [EDIT: contact email] every CTA → mailto:hello@kramuly.com, subject "Early access — Kramuly" -->
+
+<header>
+  <div class="wrap nav">
+    <span class="wordmark"><span class="dot"></span>Kramuly</span>
+    <a class="nav-link" href="mailto:hello@kramuly.com?subject=Early%20access%20%E2%80%94%20Kramuly">Request access</a>
+  </div>
+</header>
+
+<main>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <!-- [EDIT: hero copy] -->
+        <span class="eyebrow">Agentic commitment intelligence</span>
+        <h1>An agent that stays on every commitment you&rsquo;ve made.</h1>
+        <p class="subhead">A dashboard waits for you to check it. Kramuly&rsquo;s agents don&rsquo;t wait — they read the work behind every client program — the commits, deploys, tickets and channels — to know which commitments will miss <span class="mark">weeks before the status turns red</span>, investigate why, and draft the fix for you to approve.</p>
+        <p class="aud">For <b>IT services firms, GCCs &amp; systems integrators</b> running client programs.</p>
+        <div class="cta-row">
+          <a class="btn" href="mailto:hello@kramuly.com?subject=Early%20access%20%E2%80%94%20Kramuly">Request early access</a>
+          <a class="btn-ghost" href="#product">What the agents do &darr;</a>
+        </div>
+        <p class="note">Onboarding a small group of design partners.</p>
+      </div>
+    </div>
+
+    <!-- Illustrative product preview: one commitment — watched → explained → acted on -->
+    <div class="wrap preview-wrap">
+      <div class="browser" aria-hidden="true">
+        <div class="browser-bar">
+          <span class="tl"><i></i><i></i><i></i></span>
+          <span class="urlpill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>app.kramuly.com</span>
+        </div>
+        <div class="browser-body">
+          <div class="agents">
+            <span class="ag live"><i></i>Watcher · live</span>
+            <span class="ag trace"><i></i>Investigator · traced</span>
+            <span class="ag ready"><i></i>Drafter · ready</span>
+          </div>
+          <div class="commit-head">
+            <div class="commit-title">Phase 2 UAT sign-off <span>— due Aug 14</span></div>
+            <span class="rep-pill2"><i></i>Reported: On track</span>
+          </div>
+          <div class="risk">
+            <span class="risk-txt">Kramuly: at risk — will miss by ~3 weeks</span>
+            <span class="conf">detection 86%</span>
+          </div>
+          <div class="why">
+            <div class="why-l">Why</div>
+            <div class="evrow"><span class="ev-t">Integration dependency blocked 9 days</span><span class="ev-s">Jira</span></div>
+            <div class="evrow"><span class="ev-t">Client pushed 2 new scope items in #uat</span><span class="ev-s">Slack</span></div>
+            <div class="evrow"><span class="ev-t">Test lead unassigned since Jul 28</span><span class="ev-s">Jira</span></div>
+          </div>
+          <div class="drafted2">
+            <span class="dl"><i></i>DRAFTED INTERVENTION · READY TO APPROVE</span>
+            <div class="dt">Drafted: escalation to program sponsor</div>
+            <div class="dp">Phase 2 UAT sign-off will slip ~3 weeks past Aug 14. Root cause: a blocked integration dependency (9 days) plus two unbudgeted scope items added in #uat. Recommended: escalate the dependency to the platform owner, re-baseline the UAT window, and reassign a test lead before the next steering review on…</div>
+            <div class="da2"><span class="appr2">Approve</span><span class="edit2">Edit</span></div>
+          </div>
+        </div>
+      </div>
+      <p class="preview-cap">Illustrative preview — one commitment, watched, explained, and acted on.</p>
+    </div>
+  </section>
+
+  <!-- THE PROBLEM -->
+  <section class="problem" id="problem">
+    <div class="wrap">
+      <div class="shead"><span class="eyebrow">The problem</span><span class="ix">01 / 07</span></div>
+      <h2>Leaders are flying blind —<br>until the steering review.</h2>
+      <div class="p-list">
+        <div class="p-item"><span class="p-num">01</span><div><h3>Green that&rsquo;s quietly red</h3><p>The status says healthy; the real state diverged weeks ago.</p></div></div>
+        <div class="p-item"><span class="p-num">02</span><div><h3>Blindsided, too late</h3><p>Programs surface as failing in the review, when there&rsquo;s no time left to fix them.</p></div></div>
+        <div class="p-item"><span class="p-num">03</span><div><h3>Margin &amp; dates leak unseen</h3><p>Fixed-bid programs slip on cost or deadline before anyone sees it coming.</p></div></div>
+        <div class="p-item"><span class="p-num">04</span><div><h3>A number, never a reason</h3><p>Even when something turns red, nothing tells you why, or what to do about it.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REPORTED vs REALITY -->
+  <section class="reality" id="reality">
+    <div class="wrap">
+      <div class="shead"><span class="eyebrow">Reported vs. reality</span><span class="ix">02 / 07</span></div>
+      <h2>The status is green.<br>The reality is everywhere else.</h2>
+      <p class="lead">A status report is one tidy, lagging line — and it&rsquo;s almost always green. The real state of a program is scattered across a dozen places, buried in the work itself. Kramuly reads those scattered signals and reconstructs the single truth the report is missing.</p>
+      <div class="rv">
+        <div class="rv-card rep">
+          <div class="rv-h"><span>Reported</span><span>steering deck</span></div>
+          <div class="rv-b">
+            <span class="rep-pill"><i></i>On track</span>
+            <span class="rep-meta">Orion — fixed-bid rollout</span>
+            <span class="rep-note">updated 14 days ago<br>one number, one direction</span>
+          </div>
+        </div>
+        <div class="rv-card real">
+          <div class="rv-h"><span>Reality</span><span>spread across your tools</span></div>
+          <div class="rv-b">
+            <div class="sig red">
+              <span class="sig-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a7.5 7.5 0 0 1-10.9 6.7L4 19.5l1.3-4.1A7.5 7.5 0 1 1 21 11.5z"/></svg></span>
+              <div><div class="sig-s">Slack · #orion-program</div><div class="sig-t">Client escalated scope — twice this week.</div></div>
+            </div>
+            <div class="sig">
+              <span class="sig-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M9 4.5v15M15 4.5v15"/></svg></span>
+              <div><div class="sig-s">Jira</div><div class="sig-t">12 tickets reopened this sprint.</div></div>
+            </div>
+            <div class="sig red">
+              <span class="sig-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.4"/><path d="M3.5 12h5.1M15.4 12h5.1"/></svg></span>
+              <div><div class="sig-s">Commits &amp; deploys</div><div class="sig-t">Velocity down 40%; release stalled 9 days.</div></div>
+            </div>
+            <div class="sig red">
+              <span class="sig-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M7 20v-6M12 20V8M17 20v-9"/></svg></span>
+              <div><div class="sig-s">ERP</div><div class="sig-t">Margin &minus;6 pts against plan, unbilled.</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="reconcile">
+        <span class="rc-l"><span class="rc-dot"></span><span>Kramuly reconciles the gap into one true state —</span></span>
+        <span class="rc-pill"><i></i>Orion will miss · flagged 3 weeks early</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- THE PRODUCT — centerpiece -->
+  <section class="product" id="product">
+    <div class="wrap">
+      <div class="shead"><span class="eyebrow">What the agents do</span><span class="ix">03 / 07</span></div>
+      <h2>Not a dashboard. A team of agents that work.</h2>
+      <p class="sub">Three things they do on their own — that a status report never will:</p>
+      <div class="stack">
+        <div class="act">
+          <div class="n">01</div>
+          <div><h3>They stay on the work, continuously</h3><p>Every commitment, every program — read from the work itself: the channels, the tickets, the commits, the deploys. No one pulls a report or updates a status. The agents stay on the work, not your people.</p></div>
+        </div>
+        <div class="act">
+          <div class="n">02</div>
+          <div><h3>They investigate</h3><p>When something drifts, they trace it to its root across the context graph they&rsquo;ve built — your Slack and Teams channels, Jira, the commit and deploy history, and ERP — the way your best analyst would, without being asked, and tell you why, with the evidence.</p></div>
+        </div>
+        <div class="act">
+          <div class="n">03</div>
+          <div><h3>They draft the fix</h3><p>The escalation, the re-plan, the client update — written and ready for you to approve. From signal to action, autonomously.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how">
+    <div class="wrap">
+      <div class="shead"><span class="eyebrow">How it works</span><span class="ix">04 / 07</span></div>
+      <h2>The agents read the work, not the status reports.</h2>
+      <p class="lead">Every promise you make a client — in a SOW, a steering review, a Slack or Teams channel — is a commitment. Kramuly reconstructs their true state from the raw signals your teams already generate — read-only, no migration, no new tool for anyone to adopt.</p>
+      <div class="steps">
+        <div><div class="num">01</div><h3>They read the signals</h3><p>Slack and Teams channels, Jira, commits and deploys, ERP — the exhaust where the real state lives.</p></div>
+        <div><div class="num">02</div><h3>They build the context graph</h3><p>A living map of how every commitment, team and vendor depends on the others — so a blocker in one surfaces as risk in all of them.</p></div>
+        <div><div class="num">03</div><h3>They reason and act</h3><p>What will miss, why, and the intervention to make now — drafted and waiting.</p></div>
+      </div>
+      <div class="srcs-label">Signal sources</div>
+      <div class="srcs">
+        <div class="src">
+          <span class="src-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a7.5 7.5 0 0 1-10.9 6.7L4 19.5l1.3-4.1A7.5 7.5 0 1 1 21 11.5z"/></svg></span>
+          <div><span class="src-n">Slack &amp; Teams</span><span class="src-d">Channels, threads, and the decisions made in them.</span></div>
+        </div>
+        <div class="src">
+          <span class="src-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M9 4.5v15M15 4.5v15"/></svg></span>
+          <div><span class="src-n">Jira</span><span class="src-d">Tickets, sprints, and where the work really stands.</span></div>
+        </div>
+        <div class="src">
+          <span class="src-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.4"/><path d="M3.5 12h5.1M15.4 12h5.1"/></svg></span>
+          <div><span class="src-n">Commits &amp; deploys</span><span class="src-d">Code velocity, churn, and release cadence — the true pace.</span></div>
+        </div>
+        <div class="src">
+          <span class="src-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M7 20v-6M12 20V8M17 20v-9"/></svg></span>
+          <div><span class="src-n">ERP &amp; finance</span><span class="src-d">Cost, billing, and margin as they actually move.</span></div>
+        </div>
+        <div class="src">
+          <span class="src-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3.5H7.5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8z"/><path d="M14 3.5V8h4.5"/><path d="M9 13h6M9 16.5h4"/></svg></span>
+          <div><span class="src-n">SOWs &amp; contracts</span><span class="src-d">The commitments themselves — scope, dates, terms.</span></div>
+        </div>
+        <div class="src">
+          <span class="src-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="11" rx="1.5"/><path d="M12 15.5v4M8.5 19.5h7"/></svg></span>
+          <div><span class="src-n">Steering decks</span><span class="src-d">What was reported up — measured against reality.</span></div>
+        </div>
+      </div>
+      <p class="src-note">Read-only, at the level of the work — commitments and their signals, never individuals.</p>
+    </div>
+  </section>
+
+  <!-- COORDINATION ROOM — portfolio work surface -->
+  <section class="room-sec" id="room">
+    <div class="wrap">
+      <div class="shead"><span class="eyebrow">Where it&rsquo;s heading</span><span class="ix">05 / 07</span></div>
+      <h2>From single warnings to a coordination room.</h2>
+      <p class="lead">As trust builds, Kramuly becomes the surface where every at-risk commitment is triaged and resolved — humans and agents working the same room.</p>
+      <div class="browser room" aria-hidden="true">
+        <div class="browser-bar">
+          <span class="tl"><i></i><i></i><i></i></span>
+          <span class="urlpill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>app.kramuly.com/room</span>
+        </div>
+        <div class="room-top">
+          <span class="rt-l">This week</span>
+          <span><b>4 saves</b></span><span class="rt-sep">·</span>
+          <span><b>2.8 wks</b> avg early warning</span>
+        </div>
+        <div class="room-grid">
+          <aside class="room-left">
+            <div class="rail-l">Portfolio</div>
+            <div class="filters">
+              <div class="filt">All programs <span class="c">28</span></div>
+              <div class="filt sel">At risk <span class="c">7</span></div>
+              <div class="filt">Awaiting approval <span class="c">3</span></div>
+              <div class="filt">Resolved this week <span class="c">12</span></div>
+            </div>
+          </aside>
+          <div class="room-main">
+            <div class="rows">
+              <div class="row exp">
+                <div class="row-top">
+                  <span class="row-name">UAT sign-off <span>· Apollo</span></span>
+                  <span class="risk-tag">miss ~3 wks</span>
+                  <span class="conf2">86%</span>
+                  <span class="status go">Fix drafted — approve</span>
+                </div>
+                <div class="row-why">Integration dependency blocked 9 days; 2 scope items added in #uat.</div>
+                <div class="row-draft">
+                  <span class="rd-l"><i></i>DRAFTED · READY</span>
+                  <div class="rd-t">Escalation to sponsor + re-baselined UAT window</div>
+                  <div class="rd-a"><span class="appr2">Approve</span><span class="edit2">Edit</span></div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="row-top">
+                  <span class="row-name">Data migration cutover <span>· Orion</span></span>
+                  <span class="risk-tag">miss ~2 wks</span>
+                  <span class="conf2">78%</span>
+                  <span class="status inv">Investigating…</span>
+                </div>
+              </div>
+              <div class="row">
+                <div class="row-top">
+                  <span class="row-name">Go-live readiness <span>· Helix</span></span>
+                  <span class="risk-tag">at risk</span>
+                  <span class="conf2">71%</span>
+                  <span class="status note">Owner notified</span>
+                </div>
+              </div>
+              <div class="row">
+                <div class="row-top">
+                  <span class="row-name">Vendor SLA milestone <span>· Atlas</span></span>
+                  <span class="risk-tag">miss ~1 wk</span>
+                  <span class="conf2">69%</span>
+                  <span class="status go">Fix drafted — approve</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <aside class="room-right">
+            <div class="rail-l">Agents</div>
+            <div class="agents-panel">
+              <div class="apx live"><i></i><div><div class="n">Watcher</div><div class="d">142 commitments live</div></div></div>
+              <div class="apx trace"><i></i><div><div class="n">Investigator</div><div class="d">3 active traces</div></div></div>
+              <div class="apx ready"><i></i><div><div class="n">Drafter</div><div class="d">3 fixes ready</div></div></div>
+            </div>
+          </aside>
+        </div>
+      </div>
+      <p class="preview-cap">Illustrative preview of where Kramuly is heading — the coordination room for human and agent execution.</p>
+    </div>
+  </section>
+
+  <!-- THE PAYOFF — hidden savings -->
+  <section class="payoff" id="payoff">
+    <div class="wrap">
+      <div class="shead"><span class="eyebrow">What it saves</span><span class="ix">06 / 07</span></div>
+      <h2>The savings hide in the slips<br>you never have to absorb.</h2>
+      <p class="lead">The costliest part of a miss is finding out late. The margin quietly eroded, the penalty triggered, the dependency that stalled five other commitments — caught weeks early, each is a footnote instead of a write-off, and none of it ever shows up on an invoice.</p>
+      <div class="value-grid">
+        <div class="vcard"><span class="vt">Margin</span><h3>Protected margin</h3><p>Catch a fixed-bid slip while it&rsquo;s still a few unbilled days — not a quarter you write off at close.</p></div>
+        <div class="vcard"><span class="vt">Penalties</span><h3>Penalties never triggered</h3><p>Hit the dates that carry SLA credits and liquidated damages, before the miss is locked in.</p></div>
+        <div class="vcard"><span class="vt">Dependencies</span><h3>Blockers cleared before they cascade</h3><p>Cross-team and vendor dependencies about to stall a commitment, surfaced early — and unblocked before one slip becomes five.</p></div>
+        <div class="vcard"><span class="vt">Scale</span><h3>A PMO that scales without headcount</h3><p>The agents do the dirty work — reconstructing status, chasing updates, tracing blockers — so each leader runs more programs and your senior people spend their time on judgment, not data-gathering.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHO IT'S FOR -->
+  <section class="who">
+    <div class="wrap">
+      <div class="shead"><span class="eyebrow">Who it&rsquo;s for</span><span class="ix">07 / 07</span></div>
+      <h2>Built for IT services, GCCs<br>and systems integrators.</h2>
+      <p class="lead"><b>Delivery Heads, COOs, and Heads of PMO</b> who run client programs and carry the number — the people accountable for what was promised, and the first to be blamed when a commitment slips.</p>
+      <div class="segs">
+        <span class="seg">IT services firms</span><span class="seg">GCCs</span><span class="seg">System integrators</span><span class="seg">Enterprise transformation orgs</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA BAND -->
+  <section class="band">
+    <div class="wrap">
+      <span class="eyebrow">Early access</span>
+      <h2>We&rsquo;re onboarding design partners now.</h2>
+      <p>If you run programs and you&rsquo;re tired of being surprised, let&rsquo;s talk.</p>
+      <div class="cta-row">
+        <a class="btn" href="mailto:hello@kramuly.com?subject=Early%20access%20%E2%80%94%20Kramuly">Request early access</a>
+      </div>
+      <p class="email">or email <a href="mailto:hello@kramuly.com?subject=Early%20access%20%E2%80%94%20Kramuly">hello@kramuly.com</a></p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span class="foot-brand"><span class="dot"></span>Kramuly&nbsp;<span class="foot-c">© 2026</span></span>
+    <a href="mailto:hello@kramuly.com?subject=Early%20access%20%E2%80%94%20Kramuly">hello@kramuly.com</a>
+  </div>
+</footer>
+
+</body>
+</html>
